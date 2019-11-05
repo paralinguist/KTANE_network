@@ -370,8 +370,9 @@ while True:
 
   place_modules(module_leds)
 
-  button("Restart", 150, 450, 100, 50, green, bright_green, restart_bomb)
-
+  button("Restart", 20, 420, 100, 50, green, bright_green, restart_bomb)
+  button("Quit", 20, 500, 100, 50, red, bright_red, quitgame)
+          
   pygame.display.update()
   dt = clock.tick(15)
 
