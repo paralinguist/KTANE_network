@@ -12,11 +12,13 @@ pygame.init()
 leds_available = ['IBM', 'CAR', 'RAC', 'LIT', 'ARM']
 leds_on = {'IBM': 'A', 'CAR': 'B', 'RAC': 'C', 'LIT': 'D', 'ARM': 'E'}
 
+#Bomb status codes
 INITIALISING = 0
 ACTIVE = 1
 DEFUSED = 2
 EXPLODED = 3
 
+#Colour presets
 black = (0, 0, 0)
 white = (255, 255, 255)
 blue = (0, 0, 127)
@@ -27,42 +29,67 @@ dim_green = (0,60,0)
 bright_green = (0, 255, 0)
 bright_red = (255, 0, 0)
 
+#Hard-coded LED image sizes. TODO rescale based on display res
 led_dimensions = (36,37)
 
-green_led = pygame.image.load('green_led.png')
+green_led = pygame.image.load('./images/green_led.png')
 green_led = pygame.transform.scale(green_led, led_dimensions)
-red_led = pygame.image.load('red_led.png')
+red_led = pygame.image.load('./images/red_led.png')
 red_led = pygame.transform.scale(red_led, led_dimensions)
-blue_led = pygame.image.load('blue_led.png')
+blue_led = pygame.image.load('./images/blue_led.png')
 blue_led = pygame.transform.scale(blue_led, led_dimensions)
-orange_led = pygame.image.load('orange_led.png')
+orange_led = pygame.image.load('./images/orange_led.png')
 orange_led = pygame.transform.scale(orange_led, led_dimensions)
-purple_led = pygame.image.load('purple_led.png')
+purple_led = pygame.image.load('./images/purple_led.png')
 purple_led = pygame.transform.scale(purple_led, led_dimensions)
 
 led_images = [orange_led, purple_led, blue_led]
-off_led = pygame.image.load('off_led.png')
+off_led = pygame.image.load('./images/off_led.png')
 off_led = pygame.transform.scale(off_led, led_dimensions)
 
-background = pygame.image.load('background.png')
-info_screen = pygame.image.load('timer_screen.png')
+background = pygame.image.load('./images/diamond_plate_sm.jpg')
+info_screen = pygame.image.load('./images/timer_screen.png')
 info_screen = pygame.transform.scale(info_screen, (700, 55))
-timer_screen = pygame.image.load('timer_screen.png')
+timer_screen = pygame.image.load('./images/timer_screen.png')
 
-display_width = 800
-display_height = 600
 
+#Uncomment/comment the below lines based on whether you want automatic dimensions (for fullscreen) or smaller (for windowed)
+
+#Auto dimensions
+#gameDisplay = pygame.display.set_mode()
+
+#Fixed dimensions
+gameDisplay = pygame.display.set_mode((1280, 800))
+
+bg_width, bg_height = background.get_rect().size
+display_width = pygame.display.get_surface().get_width()
+display_height = pygame.display.get_surface().get_height()
+tilex = display_width // bg_width + 1
+tiley = display_height // bg_height + 1
+
+#Uncomment to enable full screen
+#gameDisplay = pygame.display.set_mode((display_width, display_height), pygame.FULLSCREEN, 16)
+
+v_margin = 50
+h_margin = 80
+
+v_centre = display_height // 2
+h_centre = display_width // 2
+
+l_column = h_margin
+r_column = display_width - l_column
+t_row = v_margin
+b_row = display_height - t_row
 
 clock = pygame.time.Clock()
 
-gameDisplay = pygame.display.set_mode((display_width, display_height))
-pygame.display.set_caption('Defuse the bomb!')
+pygame.display.set_caption('KTaNE Bomb Server')
 
 pygame.time.set_timer(pygame.USEREVENT, 1000)
 
 def quitgame():
   pygame.quit()
-  quit()
+  exit()
 
 def text_objects(text, font, colour, background=None):
   textSurface = font.render(text, True, colour, background)
@@ -164,7 +191,7 @@ def new_bomb(timer):
   global module_leds
   module_leds = {}
   bomb = {'fuse_start':fuse_start, 'fuse_end':fuse_end, 'serial':serial, 'leds':leds, 'status':status, 'strikes':strikes, 'max_strikes':max_strikes, 'modules':modules}
-  pygame.mixer.music.load('./setup.ogg')
+  pygame.mixer.music.load('./sound/setup.ogg')
   pygame.mixer.music.play(0)
   return bomb
 
@@ -219,20 +246,23 @@ def restart_bomb():
 
 #25 char display?
 def info_display(message):
-  gameDisplay.blit(info_screen, (display_width*0.065, 15))
+  screen_width, screen_height = info_screen.get_rect().size
+  screen_x = h_centre - (screen_width // 2)
+  screen_y = t_row
+  gameDisplay.blit(info_screen, (screen_x, screen_y))
   chars = len(message)
   diff = 25 - chars
   message = message + (' ' * diff)
   TextSurf, TextRect = text_objects(message, info_text, bright_green)
-  TextRect.left = display_width * 0.085
-  TextRect.top = 20
+  TextRect.left = screen_x + 20
+  TextRect.top = screen_y + 5
   gameDisplay.blit(TextSurf, TextRect)
 
 def place_serial(serial):
   serial = 'SN- ' + serial
   TextSurf, TextRect = text_objects(serial, serial_text, white, black)
-  TextRect.left = display_width * 0.02
-  TextRect.top = display_height * 0.95
+  TextRect.left = l_column
+  TextRect.top = t_row * 3
   gameDisplay.blit(TextSurf, TextRect)
 
 def place_led(text, status, x, y, colour):
@@ -246,11 +276,12 @@ def place_led(text, status, x, y, colour):
 
 def place_modules(leds):
   TextSurf, TextRect = text_objects('Modules to disarm', serial_text, white, black)
-  TextRect.left = display_width * 0.65
-  TextRect.top = display_height * 0.2
+  mod_width, mod_height = TextRect.size
+  TextRect.left = r_column - mod_width
+  TextRect.top = t_row * 3
   gameDisplay.blit(TextSurf, TextRect)
-  x = display_width * 0.65
-  y = display_height * 0.2 + 40
+  x = TextRect.left 
+  y = TextRect.top + mod_height + 20
   item = 0
   for led in leds:
     gameDisplay.blit(leds[led], (x, y))
@@ -258,18 +289,20 @@ def place_modules(leds):
     item += 1
     if item % 3 == 0:
       y += 50
-      x = display_width * 0.65
+      x = TextRect.left
   for i in range(0,6-len(leds)):
     gameDisplay.blit(off_led, (x, y))
     x = x + 100
     item += 1
     if item % 3 == 0:
       y += 50
-      x = display_width * 0.65
+      x = TextRect.left
+  #TODO: blank box behind LEDs
 
 def place_strikes(strikes):
+  screen_width, screen_height = info_screen.get_rect().size
   x = h_centre - 110
-  y = display_height * 0.8
+  y = v_centre + screen_height + 100
   exes = ' ' + strikes * 'X '
   blanks = ' X X X '
 
@@ -288,10 +321,8 @@ def place_strikes(strikes):
   TextRect.top = y
   gameDisplay.blit(TextSurf, TextRect)
 
-v_centre = display_height // 2
-h_centre = display_width // 2
 
-#Hard coded max of 6 modules
+#Hard coded max of 6 modules - expand? Add optional limits?
 module_leds = {}
 
 #Set up fonts
@@ -304,11 +335,12 @@ smallText = pygame.font.Font('./fonts/inlanders.otf', 20)
 
 #Set up sounds
 pygame.mixer.init()
-beep = pygame.mixer.Sound("./beep.ogg")
-strike = pygame.mixer.Sound("./error.ogg")
-explode = pygame.mixer.Sound("./explode.ogg")
-success = pygame.mixer.Sound("./success.ogg")
-  
+beep = pygame.mixer.Sound("./sound/beep.ogg")
+strike = pygame.mixer.Sound("./sound/error.ogg")
+explode = pygame.mixer.Sound("./sound/explode.ogg")
+success = pygame.mixer.Sound("./sound/success.ogg")
+
+#Main game loop
 while True:
   for event in pygame.event.get():
     if event.type == pygame.USEREVENT:
@@ -317,7 +349,7 @@ while True:
           if bomb['modules'] > 0:
             bomb['status'] = ACTIVE
             pygame.mixer.music.stop()
-            pygame.mixer.music.load('./strings.ogg')
+            pygame.mixer.music.load('./sound/strings.ogg')
             pygame.mixer.music.play(0)
           else:
             bomb['status'] = DEFUSED
@@ -328,11 +360,20 @@ while True:
         if time.time() > bomb['fuse_end']:
           #kaboom
           bomb['status'] = EXPLODED
-
+    elif event.type == pygame.KEYDOWN:
+      if event.key == pygame.K_ESCAPE:
+        quitgame()
+      if event.key == pygame.K_v:
+        restart_bomb()
+    elif event.type == pygame.QUIT:
+      quitgame()
   gameDisplay.fill(black)
   timer = '0:00'
 
-  gameDisplay.blit(background, (0,0))
+
+  for i in range(0, tiley):
+    for j in range(0,tilex):
+      gameDisplay.blit(background, (j*bg_width,i*bg_height))
 
   #TODO: Create a function for writing to the middle message
   if bomb['status'] == INITIALISING:
@@ -355,8 +396,8 @@ while True:
   gameDisplay.blit(back_surf, back_rect)
   gameDisplay.blit(TimerSurf, TimerRect)
   
-  led_x = display_width * 0.9
-  led_y = display_height - 150
+  led_x = r_column - l_column
+  led_y = b_row - 150
   leds = decode_leds(bomb['leds'])
   led_colour = 0
   for led in leds:
@@ -370,9 +411,9 @@ while True:
 
   place_modules(module_leds)
 
-  button("Restart", 20, 420, 100, 50, green, bright_green, restart_bomb)
-  button("Quit", 20, 500, 100, 50, red, bright_red, quitgame)
-          
+  button("Restart", l_column, b_row - 50, 100, 50, green, bright_green, restart_bomb)
+  button("Quit", l_column + 120, b_row - 50, 100, 50, red, bright_red, quitgame)
+
   pygame.display.update()
   dt = clock.tick(15)
 

@@ -13,21 +13,26 @@ leds_available = ['IBM', 'CAR', 'RAC', 'LIT', 'ARM']
 leds_on = {'IBM': 'A', 'CAR': 'B', 'RAC': 'C', 'LIT': 'D', 'ARM': 'E'}
 
 module_id = uuid.uuid1().hex
-#print(f'Set ID: {module_id}')
+
+server = socket.socket()
 
 def query(ip, request):
   host = ip
   port = 9876
   response = 'No connection to server.'
-  server = socket.socket()
+  global server
   try:
-    server.connect((host, port))
     server.send(request.encode())
     response = server.recv(4096).decode()
-    server.shutdown(socket.SHUT_RDWR)
-    server.close()
+    #server.shutdown(socket.SHUT_RDWR)
+    #server.close()
   except:
-    response = 'Error connecting. Is server running/listening on that IP?'
+    try:
+      server.connect((host, port))
+      server.send(request.encode())
+      response = server.recv(4096).decode()
+    except:
+      response = "No connection to server."
   return response
 
 def decode_leds(code):
