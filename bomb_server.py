@@ -1,3 +1,4 @@
+#TODO: happy ding on disarm
 import time
 import string
 import random
@@ -221,8 +222,8 @@ def pick_led_colours(leds):
   for led in leds:
     led_colours.append(random.choice(led_images))
   return led_colours
-
-bomb = new_bomb(5)
+fuse = 0.2
+bomb = new_bomb(fuse)
 led_colours = pick_led_colours(bomb['leds'])
 json_bomb = json.dumps(bomb)
 
@@ -242,7 +243,7 @@ print("Bomb server started.")
 
 def restart_bomb():
   global bomb 
-  bomb = new_bomb(5)
+  bomb = new_bomb(fuse)
 
 #25 char display?
 def info_display(message):
@@ -353,13 +354,16 @@ while True:
             pygame.mixer.music.play(0)
           else:
             bomb['status'] = DEFUSED
-            bomb = new_bomb(5)
+            bomb = new_bomb(fuse)
             led_colours = pick_led_colours(bomb['leds'])
       elif bomb['status'] == ACTIVE:
-        pygame.mixer.Sound.play(beep)
         if time.time() > bomb['fuse_end']:
           #kaboom
           bomb['status'] = EXPLODED
+          pygame.mixer.Sound.play(explode)
+          pygame.mixer.music.stop()
+        else:
+          pygame.mixer.Sound.play(beep)
     elif event.type == pygame.KEYDOWN:
       if event.key == pygame.K_ESCAPE:
         quitgame()
@@ -383,7 +387,7 @@ while True:
     info_display('Bomb is active!')
     timer = format_time(int(bomb['fuse_end']-time.time()))
   elif bomb['status'] == DEFUSED:
-    info_display('Bomb has been defused') #TODO: have a nice day
+    info_display('Bomb has been defused.') #TODO: have a nice day
   elif bomb['status'] == EXPLODED:
     info_display('Bomb exploded.') #TODO: Sad face
 

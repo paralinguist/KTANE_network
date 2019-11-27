@@ -33,6 +33,8 @@ def query(ip, request):
       response = server.recv(4096).decode()
     except:
       response = "No connection to server."
+      server.close()
+      server = socket.socket()
   return response
 
 def decode_leds(code):
