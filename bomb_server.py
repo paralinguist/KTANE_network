@@ -214,6 +214,8 @@ def disarm_module(bomb):
       bomb['status'] = DEFUSED
       pygame.mixer.Sound.play(success)
       pygame.mixer.music.stop()
+    else:
+      pygame.mixer.Sound.play(chime)
     print(f"Modules: {bomb['modules']}")
   return bomb
 
@@ -222,7 +224,7 @@ def pick_led_colours(leds):
   for led in leds:
     led_colours.append(random.choice(led_images))
   return led_colours
-fuse = 0.2
+fuse = 5
 bomb = new_bomb(fuse)
 led_colours = pick_led_colours(bomb['leds'])
 json_bomb = json.dumps(bomb)
@@ -337,6 +339,7 @@ smallText = pygame.font.Font('./fonts/inlanders.otf', 20)
 #Set up sounds
 pygame.mixer.init()
 beep = pygame.mixer.Sound("./sound/beep.ogg")
+chime = pygame.mixer.Sound("./sound/chime.ogg")
 strike = pygame.mixer.Sound("./sound/error.ogg")
 explode = pygame.mixer.Sound("./sound/explode.ogg")
 success = pygame.mixer.Sound("./sound/success.ogg")
