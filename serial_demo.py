@@ -27,7 +27,7 @@ while True:
     elif data == '!':
       registered = bomb_server.register()
       print(f'REGISTER: {registered}')
-      if registered:
+      if registered and bomb_server.get_status() == ACTIVE:
         ser.write('1'.encode())
       else:
         ser.write('0'.encode())

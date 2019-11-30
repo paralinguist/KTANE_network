@@ -209,8 +209,10 @@ def add_strike(bomb):
 
 def disarm_module(bomb):
   if bomb['status'] == ACTIVE:
+    global disarmed_modules
     bomb['modules'] -= 1
-    if bomb['modules'] <= 0:
+    disarmed_modules += 1
+    if bomb['modules'] <= 0 or (easy_mode and disarmed_modules >= 3):
       bomb['status'] = DEFUSED
       pygame.mixer.Sound.play(success)
       pygame.mixer.music.stop()
@@ -225,7 +227,9 @@ def pick_led_colours(leds):
     led_colours.append(random.choice(led_images))
   return led_colours
 fuse = 5
+easy_mode = False
 bomb = new_bomb(fuse)
+disarmed_modules = 0
 led_colours = pick_led_colours(bomb['leds'])
 json_bomb = json.dumps(bomb)
 
@@ -245,6 +249,8 @@ print("Bomb server started.")
 
 def restart_bomb():
   global bomb 
+  global disarmed_modules
+  disarmed_modules = 0
   bomb = new_bomb(fuse)
 
 #25 char display?
@@ -371,6 +377,13 @@ while True:
       if event.key == pygame.K_ESCAPE:
         quitgame()
       if event.key == pygame.K_v:
+        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
+          easy_mode = False
+          fuse = 5
+        else:
+          easy_mode = True
+          fuse = 6
+        print(f'Easy mode: {easy_mode}')
         restart_bomb()
     elif event.type == pygame.QUIT:
       quitgame()
