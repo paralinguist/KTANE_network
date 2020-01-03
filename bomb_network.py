@@ -102,6 +102,9 @@ class BombServer:
   def get_serial(self):
     return query(self.ip, 'serial')
 
+  def get_mode(self):
+    return query(self.ip, 'mode')
+
   def get_leds(self):
     leds = decode_leds(query(self.ip, 'leds'))
     return leds

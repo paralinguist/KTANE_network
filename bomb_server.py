@@ -289,7 +289,7 @@ def place_modules(leds):
   TextRect.left = r_column - mod_width
   TextRect.top = t_row * 3
   gameDisplay.blit(TextSurf, TextRect)
-  x = TextRect.left 
+  x = TextRect.left + 60
   y = TextRect.top + mod_height + 20
   item = 0
   for led in leds:
@@ -298,14 +298,14 @@ def place_modules(leds):
     item += 1
     if item % 3 == 0:
       y += 50
-      x = TextRect.left
+      x = TextRect.left + 60
   for i in range(0,6-len(leds)):
     gameDisplay.blit(off_led, (x, y))
     x = x + 100
     item += 1
     if item % 3 == 0:
       y += 50
-      x = TextRect.left
+      x = TextRect.left + 60
   #TODO: blank box behind LEDs
 
 def place_strikes(strikes):
@@ -316,7 +316,7 @@ def place_strikes(strikes):
   blanks = ' X X X '
 
   TextSurf, TextRect = text_objects('STRIKES', serial_text, white, black)
-  TextRect.left = x + 55
+  TextRect.left = x + 35
   TextRect.top = y - 30
   gameDisplay.blit(TextSurf, TextRect)
 
@@ -336,7 +336,7 @@ module_leds = {}
 
 #Set up fonts
 info_text = pygame.font.Font('./fonts/led_dots.ttf', 50)
-serial_text = pygame.font.Font('./fonts/emboss.ttf', 20)
+serial_text = pygame.font.Font('./fonts/emboss.ttf', 30)
 strike_text = pygame.font.Font('./fonts/inlanders.otf', 80)
 largeText = pygame.font.Font('./fonts/digital-7.ttf', 115)
 timer_backing = pygame.font.Font('./fonts/digital-7.ttf', 115)
@@ -377,13 +377,13 @@ while True:
       if event.key == pygame.K_ESCAPE:
         quitgame()
       if event.key == pygame.K_v:
-        if pygame.key.get_mods() & pygame.KMOD_SHIFT:
-          easy_mode = False
-          fuse = 5
-        else:
-          easy_mode = True
-          fuse = 6
+        easy_mode = True
+        fuse = 6
         print(f'Easy mode: {easy_mode}')
+        restart_bomb()
+      elif event.key == pygame.K_x:
+        easy_mode = False
+        fuse = 5
         restart_bomb()
     elif event.type == pygame.QUIT:
       quitgame()
@@ -497,6 +497,12 @@ while True:
               registered = 1
               print('Already registered!')
             SOCK.send(str(registered).encode())
+          elif 'mode' == request:
+            if easy_mode:
+              response = 'easy'
+            else:
+              response = 'hard'
+            SOCK.send(response.encode())
           elif 'bomb_object' == request:
             print('Requested whole object.')
             SOCK.send(json_bomb.encode())
